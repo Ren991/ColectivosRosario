@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colectivos Rosario - Arribos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    h1 {
+      color: #0056b3;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 25px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #555;
+    }
+    select {
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 1rem;
+      background-color: #f9f9f9;
+      transition: border-color 0.2s;
+    }
+    select:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+    select:disabled {
+      background-color: #e9e9e9;
+      cursor: not-allowed;
+    }
+    div#arribos {
+      margin-top: 25px;
+      padding: 15px;
+      border: 1px dashed #a7d9f7;
+      border-radius: 5px;
+      background-color: #e6f7ff;
+      min-height: 50px; /* To prevent layout shift */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      text-align: center;
+    }
+    div#arribos h3 {
+      color: #0056b3;
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+      width: 100%;
+    }
+    li {
+      background-color: #d1ecf1;
+      margin-bottom: 8px;
+      padding: 12px 15px;
+      border-radius: 4px;
+      border-left: 6px solid #00a0d2;
+      font-size: 0.95rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+    }
+    li strong {
+      color: #0056b3;
+      flex-basis: 70%;
+      text-align: left;
+    }
+    li span {
+      flex-basis: 28%;
+      text-align: right;
+      font-weight: bold;
+      color: #333;
+    }
+    .error-message {
+      color: #dc3545;
+      font-weight: bold;
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 15px;
+    }
+    .loading-message {
+      color: #007bff;
+      font-style: italic;
+    }
+    
+    #favorites-section {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+    #favorites-section h2 {
+      color: #0056b3;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #favorites-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      padding: 0;
+      list-style: none;
+    }
+    .favorite-item {
+      background-color: #f0f8ff;
+      border: 1px solid #a7d9f7;
+      border-radius: 5px;
+      padding: 10px 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      transition: background-color 0.2s, box-shadow 0.2s;
+      flex-grow: 1; /* Allows items to grow and fill space */
+      max-width: calc(50% - 10px); /* Two columns layout on larger screens */
+      min-width: 250px; /* Minimum width for smaller screens */
+      box-sizing: border-box; /* Include padding and border in width */
+    }
+    .favorite-item:hover {
+      background-color: #e0f0ff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .favorite-item span {
+      font-weight: bold;
+      color: #333;
+    }
+    .favorite-item .remove-btn {
+      background: none;
+      border: none;
+      color: #dc3545;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+    .favorite-item .remove-btn:hover {
+      color: #c82333;
+    }
+    #add-to-favorites-btn {
+      display: block;
+      width: 100%;
+      padding: 12px 20px;
+      margin-top: 20px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    #add-to-favorites-btn:hover {
+      background-color: #218838;
+    }
+    #add-to-favorites-btn:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+
+    /* Adjustments for responsiveness */
+    @media (max-width: 600px) {
+      .favorite-item {
+        max-width: 100%; /* Single column on small screens */
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Consultar próximos arribos de colectivos en Rosario</h1>
+    
+    <section id="favorites-section">
+      <h2>Mis Paradas Favoritas</h2>
+      <div id="favorites-list">
+        <p class="loading-message">Cargando favoritos...</p>
+      </div>
+    </section>
+
+    <label for="lineas">Seleccioná una línea:</label>
+    <select id="lineas">
+      <option value="">Cargando líneas...</option>
+    </select>
+
+    <label for="paradas">Seleccioná una parada:</label>
+    <select id="paradas" disabled>
+      <option value="">Seleccioná una línea primero</option>
+    </select>
+    
+    <button id="add-to-favorites-btn" disabled>Agregar a Favoritos</button>
+
+    <div id="arribos" class="loading-message"></div>
+  </div>
+
+  <script>
+    const selectLineas = document.getElementById('lineas');
+    const selectParadas = document.getElementById('paradas');
+    const divArribos = document.getElementById('arribos');
+    const addToFavoritesBtn = document.getElementById('add-to-favorites-btn');
+    const favoritesList = document.getElementById('favorites-list');
+
+    const FAVORITES_STORAGE_KEY = 'rosarioBusFavorites'; // Key for localStorage
+
+    let lineasGlobal = []; // Stores all lines after the initial fetch
+    let favorites = []; // Stores the user's favorite stops
+
+    // --- Helper Functions for Favorites ---
+
+    // Load favorites from localStorage
+    function loadFavorites() {
+        try {
+            const storedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
+            favorites = storedFavorites ? JSON.parse(storedFavorites) : [];
+        } catch (e) {
+            favorites = []; // Reset if parsing fails
+        }
+        renderFavorites(); // Always render after loading
+    }
+
+    // Save favorites to localStorage
+    function saveFavorites() {
+        try {
+            localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+        } catch (e) {
+            // Error saving
+        }
+    }
+
+    // Add a favorite item
+    function addFavorite(lineaId, empresaId, lineaNombre, paradaId, paradaNombre) {
+        // Check for duplicates before adding
+        const exists = favorites.some(fav => fav.lineaId === lineaId && fav.paradaId === paradaId);
+        if (!exists) {
+            favorites.push({
+                lineaId,
+                empresaId,
+                lineaNombre,
+                paradaId,
+                paradaNombre
+            });
+            saveFavorites();
+            renderFavorites();
+        }
+    }
+
+    // Remove a favorite item
+    function removeFavorite(lineaId, paradaId) {
+        favorites = favorites.filter(fav => !(fav.lineaId === lineaId && fav.paradaId === paradaId));
+        saveFavorites();
+        renderFavorites();
+    }
+
+    // Render the list of favorite stops
+    function renderFavorites() {
+        if (favorites.length === 0) {
+            favoritesList.innerHTML = '<p>No tenés paradas favoritas guardadas.</p>';
+            return;
+        }
+
+        favoritesList.innerHTML = ''; // Clear existing list
+        favorites.forEach(fav => {
+            const favItem = document.createElement('div');
+            favItem.classList.add('favorite-item');
+            favItem.dataset.lineaId = fav.lineaId;
+            favItem.dataset.empresaId = fav.empresaId;
+            favItem.dataset.paradaId = fav.paradaId;
+
+            const favText = document.createElement('span');
+            favText.textContent = `${fav.lineaNombre} - ${fav.paradaNombre}`;
+            favItem.appendChild(favText);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.classList.add('remove-btn');
+            removeBtn.innerHTML = '&times;'; // 'x' icon
+            removeBtn.title = `Remover ${fav.lineaNombre} - ${fav.paradaNombre} de favoritos`;
+            removeBtn.onclick = (e) => {
+                e.stopPropagation(); // Prevent triggering the favorite click
+                removeFavorite(fav.lineaId, fav.paradaId);
+            };
+            favItem.appendChild(removeBtn);
+
+            // Event listener to load this favorite when clicked
+            favItem.onclick = () => selectFavorite(fav.lineaId, fav.empresaId, fav.paradaId);
+            favoritesList.appendChild(favItem);
+        });
+    }
+
+    // Function to select a favorite and load its data
+    async function selectFavorite(lineaId, empresaId, paradaId) {
+        try {
+            divArribos.innerHTML = '<span class="loading-message">Cargando favorito...</span>';
+
+            // 1. Select the line in the dropdown
+            selectLineas.value = lineaId;
+            await fetchAndPopulateParadas(lineaId, empresaId);
+
+            // 2. Select the parada in the dropdown
+            selectParadas.value = paradaId;
+            await fetchAndDisplayArribos(paradaId);
+
+            updateAddToFavoritesButtonState();
+
+        } catch (error) {
+            divArribos.innerHTML = `<p class="error-message">Error al cargar favorito: ${error.message}</p>`;
+        }
+    }
+
+    // --- API Fetching Functions ---
+
+    // Function to load bus lines from the API
+    async function cargarLineas() {
+      try {
+        const url = 'https://ws.rosario.gob.ar/ubicaciones/public/lineas?nombre=all';
+        const res = await fetch(url);
+
+        if (!res.ok) { // Check for HTTP errors (e.g., 404, 500)
+          const errorText = await res.text();
+          throw new Error(`HTTP ${res.status} - ${errorText.substring(0, 200)}...`);
+        }
+
+        lineasGlobal = await res.json();
+        // Populate the lines dropdown
+        selectLineas.innerHTML = '<option value="">-- Seleccioná una línea --</option>';
+        lineasGlobal.forEach(linea => {
+          const option = document.createElement('option');
+          option.value = linea.id;
+          option.dataset.empresa = linea.idEmpresa; // Store company ID for later use
+          option.textContent = `${linea.nombre} (${linea.nombreEmpresa})`;
+          selectLineas.appendChild(option);
+        });
+      } catch (error) {
+        // Handle any errors during fetch or JSON parsing
+        selectLineas.innerHTML = '<option value="">Error al cargar líneas</option>';
+        divArribos.innerHTML = `<p class="error-message">Error al cargar las líneas: ${error.message}</p>`;
+      }
+    }
+
+    // Function to fetch and populate stops for a given line
+    async function fetchAndPopulateParadas(idLinea, idEmpresa) {
+        selectParadas.innerHTML = '<option value="">Cargando paradas...</option>';
+        selectParadas.disabled = true;
+        divArribos.innerHTML = ''; 
+
+        try {
+            
+            const url = `https://ws.rosario.gob.ar/ubicaciones/public/linea/1/${idLinea}?conGeometria=true&usarCoordenadasWGS84=true&conParadas=true`;
+            const res = await fetch(url);
+
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`HTTP ${res.status} - ${errorText.substring(0, 200)}...`);
+            }
+
+            const data = await res.json();
+
+            if (data.paradas && data.paradas.length > 0) {
+                selectParadas.innerHTML = '<option value="">-- Seleccioná una parada --</option>';
+                data.paradas.forEach(parada => {
+                    const option = document.createElement('option');
+                    option.value = parada.id;
+                    option.textContent = `${parada.nombre}`;
+                    selectParadas.appendChild(option);
+                });
+                selectParadas.disabled = false;
+            } else {
+                selectParadas.innerHTML = '<option value="">No se encontraron paradas para esta línea</option>';
+            }
+            updateAddToFavoritesButtonState();
+        } catch (error) {
+            selectParadas.innerHTML = '<option value="">Error al cargar paradas</option>';
+            divArribos.innerHTML = `<p class="error-message">Error al cargar las paradas: ${error.message}</p>`;
+            throw error; // Re-throw to allow selectFavorite to catch it
+        }
+    }
+
+    // Function to fetch and display arrivals for a given stop
+    async function fetchAndDisplayArribos(idParada) {
+        divArribos.innerHTML = '<span class="loading-message">Cargando arribos...</span>';
+
+        try {
+            const url = `https://ws.rosario.gob.ar/ubicaciones/public/cuandollega?parada=${idParada}`;
+            const res = await fetch(url);
+
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`HTTP ${res.status} - ${errorText.substring(0, 200)}...`);
+            }
+
+            const datos = await res.json();
+
+            if (!datos || datos.length === 0) {
+                divArribos.innerHTML = 'No hay datos de arribo disponibles para esta parada.';
+                return;
+            }
+
+            let arribosHtml = '';
+            datos.forEach(lineaData => {
+                const lineaNombre = lineaData.linea.nombre;
+                if (lineaData.arribos && lineaData.arribos.length > 0) {
+                    lineaData.arribos.forEach(arribo => {
+                        const minutes = arribo.arriboEnMinutos;
+                        const hora = arribo.horaArribo;
+
+                        arribosHtml += `
+                            <li>
+                                <strong>${lineaNombre}</strong>
+                                <span>
+                                    ${minutes !== undefined ? `en ${minutes} min` : ''}
+                                    ${hora ? ` (${hora})` : ''}
+                                </span>
+                            </li>
+                        `;
+                    });
+                } else {
+                    arribosHtml += `<li><strong>${lineaNombre}</strong>: No hay próximos arribos.</li>`;
+                }
+            });
+
+            if (arribosHtml === '') {
+                 divArribos.innerHTML = 'No hay datos de arribo disponibles para esta parada.';
+            } else {
+                divArribos.innerHTML = `
+                    <h3>Próximos arribos:</h3>
+                    <ul>
+                        ${arribosHtml}
+                    </ul>
+                `;
+            }
+        } catch (error) {
+            divArribos.innerHTML = `<p class="error-message">Error al cargar los arribos: ${error.message}</p>`;
+            throw error; // Re-throw to allow selectFavorite to catch it
+        }
+    }
+
+ 
+    cargarLineas();
+    loadFavorites();
+
+   
+    selectLineas.addEventListener('change', async () => {
+        const idLinea = selectLineas.value;
+        const selectedOption = selectLineas.options[selectLineas.selectedIndex];
+        const idEmpresa = selectedOption ? selectedOption.dataset.empresa : null;
+
+        if (!idLinea || !idEmpresa) {
+            selectParadas.innerHTML = '<option value="">Seleccioná una línea válida primero</option>';
+            selectParadas.disabled = true;
+            divArribos.innerHTML = '';
+            updateAddToFavoritesButtonState();
+            return;
+        }
+
+        try {
+            await fetchAndPopulateParadas(idLinea, idEmpresa);
+            if (selectParadas.value) { 
+                await fetchAndDisplayArribos(selectParadas.value);
+            }
+        } catch (error) {
+          
+            
+        }
+    });
+
+    selectParadas.addEventListener('change', async () => {
+        const idParada = selectParadas.value;
+        if (!idParada) {
+            divArribos.innerHTML = '';
+            updateAddToFavoritesButtonState();
+            return;
+        }
+        try {
+            await fetchAndDisplayArribos(idParada);
+            updateAddToFavoritesButtonState();
+        } catch (error) {
+        }
+    });
+
+
+    addToFavoritesBtn.addEventListener('click', () => {
+        const idLinea = selectLineas.value;
+        const selectedLineOption = selectLineas.options[selectLineas.selectedIndex];
+        const idEmpresa = selectedLineOption ? selectedLineOption.dataset.empresa : null;
+        const lineaNombre = selectedLineOption ? selectedLineOption.textContent.split('(')[0].trim() : '';
+
+        const idParada = selectParadas.value;
+        const selectedParadaOption = selectParadas.options[selectParadas.selectedIndex];
+        const paradaNombre = selectedParadaOption ? selectedParadaOption.textContent : '';
+
+        if (idLinea && idEmpresa && idParada && lineaNombre && paradaNombre) {
+            addFavorite(idLinea, idEmpresa, lineaNombre, idParada, paradaNombre);
+        }
+    });
+
+    function updateAddToFavoritesButtonState() {
+        const isLineSelected = selectLineas.value !== '';
+        const isParadaSelected = selectParadas.value !== '';
+        addToFavoritesBtn.disabled = !(isLineSelected && isParadaSelected);
+    }
+
+    updateAddToFavoritesButtonState();
+  </script>
+</body>
+</html>
